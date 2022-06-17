@@ -61,5 +61,4 @@ void loop(){
   client.print(";");
   client.print(z);
   client.print("/");
-
 }
