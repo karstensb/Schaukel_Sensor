@@ -1,9 +1,11 @@
+import asyncio
 import math
+import sys
 import time
 import random
 import tkinter as tk
 
-from server import receive
+from server import receive, start_server
 
 window = None
 canvas = None
@@ -56,12 +58,6 @@ def swing_pos(angle):
         circle_center_y,
         swing_radius*math.cos(angle) + circle_center_x,
         swing_radius*math.sin(angle) + circle_center_y)
-    for j in range(len(arcs)):
-        arcs[j].tick()
-    window.update()
-
-def show_fps(fps):
-    canvas.itemconfig(fps_counter, text='FPS: '+str(fps))
     window.update()
 
 def screen_init():
@@ -102,29 +98,20 @@ def screen_init():
     global line
     line = canvas.create_line(circle_center_x, circle_center_y, 0, 0, fill = 'black', width=10)
 
-    global fps_counter
-    fps_counter = canvas.create_text(30, 10, fill='black', text='FPS: 0')
+def update(angle):
+    swing_pos(angle)
+    for i in range(len(arcs)):
+        arcs[i].tick()
 
-inc = True
-i = -30
-def update():
-    global i
-    global inc
-    start_time = time.perf_counter()
-    if i >= random.randint(150, 210):
-        inc = False
-    elif i <= random.randint(-30, 30):
-        inc= True
-    i = i+1 if inc else i-1
-    swing_pos(i)
-    fps = int(1/(time.perf_counter()-start_time))
-    show_fps(fps)
-
-def main():
+prev_angle = 0
+async def main():
     screen_init()
-    for gyro_x, gyro_y, gyro_z, accel_x, accel_y, accel_z in receive():
-        update()
-        print(gyro_x, gyro_y, gyro_z, accel_x, accel_y, accel_z)
+    start_server()
+    async for angle in receive():
+        print(angle)
+        update(angle)
+    # async for gyro_x, gyro_y, gyro_z, accel_x, accel_y, accel_z in receive():
+    #     print(gyro_x, gyro_y, gyro_z, accel_x, accel_y, accel_z)
 
 if __name__ == '__main__':
-    main()
+    asyncio.run(main())
