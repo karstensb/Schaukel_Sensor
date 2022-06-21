@@ -25,6 +25,8 @@ void getAccel(float& x, float& y, float& z){
 }
 
 void setup(){
+  //Serial.begin(9600);
+
   if(!IMU.begin()){
      //Serial.println("Failed to initialize IMU!");
     while(1);
@@ -58,6 +60,7 @@ void loop(){
   prev_gyro_x = gyro_x;
   client.print(angle);
   client.print(";");
+  //Serial.println(angle);
 
   //getAccel(accel_x, accel_y, accel_z);
   // client.print(gyro_x);

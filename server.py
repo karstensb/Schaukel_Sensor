@@ -3,12 +3,12 @@ import socket
 HOST = "0.0.0.0"
 PORT = 8080
 
-s = None
-conn =None
+s : socket.socket = None
+conn : socket.socket = None
 addr = None
 
 
-def start_server():
+def start():
     global conn, addr, s 
     print("Starting server...")
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -18,21 +18,15 @@ def start_server():
     conn, addr = s.accept()
     print(f"Connected by {addr}")
 
+def stop():
+    s.close()
+
 async def receive():
     while True:
-        data = conn.recv(1024)
-        if ';' not in str(data):
-            data += conn.recv(1024)
-        try:
-            angle = float(str(data).replace('b', '').replace("'", "").split(';')[0])
-        except ValueError:
-            continue
+        bytes = conn.recv(1024)
+        while ';' not in str(bytes):
+            bytes += conn.recv(1024)
+        data = str(bytes).replace('b', '').replace("'", "").split(';')[1:-2]
+
+        angle = float(data[0])
         yield angle
-        # if '/' not in str(data):
-        #     data += conn.recv(1024)
-        # vals = str(data).replace('b', '').replace("'", "").split('/')[0]
-        # try:
-        #     gyro_x, gyro_y, gyro_z, accel_x, accel_y, accel_z = (float(x) for x in vals.split(';'))
-        # except ValueError:
-        #     continue
-        # yield gyro_x, gyro_y, gyro_z, accel_x, accel_y, accel_z

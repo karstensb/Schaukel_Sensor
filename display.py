@@ -1,21 +1,17 @@
 import asyncio
 import math
-import sys
-import time
-import random
 import tkinter as tk
 
-from server import receive, start_server
+import server
 
 window = None
 canvas = None
 arcs = []
 line = None
 circle = None
-fps_counter = None
 
 circle_center_x = None
-circle_center_y = 300
+circle_center_y = 500
 circle_radius = 10
 
 swing_radius = 500
@@ -42,16 +38,30 @@ class Arc:
         canvas.itemconfig(self.arc, outline=self.color)
 
 def quit(e):
+    server.stop()
     window.destroy()
 
 def map(x, in_min, in_max, out_min, out_max):
     return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
 
+prev_angle = 0
 def swing_pos(angle):
-    try:
-        arcs[int(map(angle, 210, -30, 0, len(arcs)))].highlight()
-    except IndexError:
-        pass
+    global prev_angle
+    angle = int(angle)-30
+    if angle > prev_angle:
+        while prev_angle <= angle:
+            try:
+                arcs[int(map(prev_angle, 210, -30, 0, 240))].highlight()
+            except IndexError:
+                pass
+            prev_angle += 1
+    elif angle < prev_angle:
+        while prev_angle >= angle:
+            try:
+                arcs[int(map(prev_angle, 210, -30, 0, 240))].highlight()
+            except IndexError:
+                pass
+            prev_angle -= 1
     angle = angle * math.pi/180
     canvas.coords(line,
         circle_center_x,
@@ -81,7 +91,7 @@ def screen_init():
         circle_center_y+circle_radius,
         fill='red')
 
-    x=100
+    x=240
     for i in range(x):
         arc = Arc(
             circle_center_x-swing_radius,
@@ -103,15 +113,11 @@ def update(angle):
     for i in range(len(arcs)):
         arcs[i].tick()
 
-prev_angle = 0
 async def main():
     screen_init()
-    start_server()
-    async for angle in receive():
-        print(angle)
+    server.start()
+    async for angle in server.receive():
         update(angle)
-    # async for gyro_x, gyro_y, gyro_z, accel_x, accel_y, accel_z in receive():
-    #     print(gyro_x, gyro_y, gyro_z, accel_x, accel_y, accel_z)
 
 if __name__ == '__main__':
     asyncio.run(main())
