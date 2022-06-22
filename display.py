@@ -4,6 +4,9 @@ import tkinter as tk
 
 import server
 
+swing_height_real = 1
+swing_radius_real = 2
+
 window = None
 canvas = None
 arcs = []
@@ -14,9 +17,13 @@ circle_center_x = None
 circle_center_y = 500
 circle_radius = 10
 
+angle_max = 91
+angle_min = 91
+value_field = None
+
 swing_radius = 500
 
-colors = [0x000000, 0x110000, 0x220000, 0x330000, 0x440000, 0x550000, 0x660000, 0x770000, 0x880000, 0x990000, 0xAA0000, 0xBB0000, 0xCC0000, 0xDD0000, 0xEE0000, 0xFF0000, 0xFF1100, 0xFF2200, 0xFF3300, 0xFF4400, 0xFF5500, 0xFF6600, 0xFF7700, 0xFF8800, 0xFF9900, 0xFFAA00, 0xFFBB00, 0xFFCC00, 0xFFDD00, 0xFFEE00, 0xFFFF00, 0xEEFF00, 0xDDFF00, 0xCCFF00, 0xBBFF00, 0xAAFF00, 0x99FF00, 0x88FF00, 0x77FF00, 0x66FF00, 0x55FF00, 0x44FF00, 0x33FF00, 0x22FF00, 0x11FF00, 0x00FF00, 0x00FF11, 0x00FF22, 0x00FF33, 0x00FF44, 0x00FF55, 0x00FF66, 0x00FF77, 0x00FF88, 0x00FF99, 0x00FFAA, 0x00FFBB, 0x00FFCC, 0x00FFDD, 0x00FFEE, 0x00FFFF, 0x00EEFF, 0x00DDFF, 0x00CCFF, 0x00BBFF, 0x00AAFF, 0x0099FF, 0x0088FF, 0x0077FF, 0x0066FF, 0x0055FF, 0x0044FF, 0x0033FF, 0x0022FF, 0x0011FF, 0x0000FF, 0x0000EE, 0x0000DD, 0x0000CC, 0x0000BB, 0x0000AA, 0x000099, 0x000088, 0x000077, 0x000066, 0x000055, 0x000044, 0x000033, 0x000022, 0x000011, 0x000000]
+colors = [0xFF0000, 0xFF1100, 0xFF2200, 0xFF3300, 0xFF4400, 0xFF5500, 0xFF6600, 0xFF7700, 0xFF8800, 0xFF9900, 0xFFAA00, 0xFFBB00, 0xFFCC00, 0xFFDD00, 0xFFEE00, 0xFFFF00, 0xEEFF00, 0xDDFF00, 0xCCFF00, 0xBBFF00, 0xAAFF00, 0x99FF00, 0x88FF00, 0x77FF00, 0x66FF00, 0x55FF00, 0x44FF00, 0x33FF00, 0x22FF00, 0x11FF00, 0x00FF00]
 class Arc:
     def __init__(self, *args, **kwargs):
         self.arc = canvas.create_arc(args, kwargs)
@@ -24,44 +31,67 @@ class Arc:
         self.ticks = 0
 
     def highlight(self):
-        canvas.itemconfig(self.arc, outline="#000000")
-        self.ticks = 1800
+        canvas.itemconfig(self.arc, outline="red", width=200)
+        self.ticks = 0
+
+    def unhighlight(self):
+        canvas.itemconfig(self.arc, outline=self.color, width=100)
+
+    def set_max(self):
+        canvas.itemconfig(self.arc, outline='#'+hex(colors[-31]).replace('0x','').rjust(6,'0'))
+        self.ticks = 90
 
     def tick(self):
         if self.ticks > 0:
             self.ticks -= 1
-            canvas.itemconfig(self.arc, outline='#'+hex(colors[self.ticks//20]).replace('0x','').rjust(6,'0'))
-            if self.ticks <= 1300:
+            canvas.itemconfig(self.arc, outline='#'+hex(colors[-self.ticks//3-1]).replace('0x','').rjust(6,'0'))
+            if self.ticks <= 0:
                 self.unhighlight()
 
-    def unhighlight(self):
-        canvas.itemconfig(self.arc, outline=self.color)
-
 def quit(e):
-    server.stop()
     window.destroy()
 
 def map(x, in_min, in_max, out_min, out_max):
     return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
 
-prev_angle = 0
+def show_values():
+    global angle_max
+    global angle_min
+    global value_field
+    global swing_height_real
+    global swing_radius_real
+    global canvas
+
+    canvas.itemconfig(value_field, text=f'Maximum angle:  {angle_max-91}\nMinimum angle: {-1*(angle_min-91)}')
+    
+
+prev_angle = 91
 def swing_pos(angle):
     global prev_angle
-    angle = int(angle)-30
+    global angle_max
+    global angle_min
+    if angle > 138:
+        angle = 138
+    elif angle < -139:
+        angle = -139
+    angle = int(angle)+91
     if angle > prev_angle:
-        while prev_angle <= angle:
-            try:
-                arcs[int(map(prev_angle, 210, -30, 0, 240))].highlight()
-            except IndexError:
-                pass
+        while prev_angle < angle:
+            arcs[int(map(prev_angle, 230, -50, 0, 280))].set_max()
             prev_angle += 1
+        if angle >= angle_max:
+            arcs[int(map(angle_max+1, 230, -50, 0, 280))].unhighlight()
+            angle_max = angle
+            arcs[int(map(angle+1, 230, -50, 0, 280))].highlight()
     elif angle < prev_angle:
-        while prev_angle >= angle:
-            try:
-                arcs[int(map(prev_angle, 210, -30, 0, 240))].highlight()
-            except IndexError:
-                pass
+        while prev_angle > angle:
+            arcs[int(map(prev_angle, 230, -50, 0, 280))].set_max()
             prev_angle -= 1
+        if angle <= angle_min:
+            arcs[int(map(angle_min-1, 230, -50, 0, 280))].unhighlight()
+            angle_min = angle
+            arcs[int(map(angle-1, 230, -50, 0, 280))].highlight()
+
     angle = angle * math.pi/180
     canvas.coords(line,
         circle_center_x,
@@ -91,7 +121,7 @@ def screen_init():
         circle_center_y+circle_radius,
         fill='red')
 
-    x=240
+    x=280
     for i in range(x):
         arc = Arc(
             circle_center_x-swing_radius,
@@ -99,17 +129,21 @@ def screen_init():
             circle_center_x+swing_radius,
             circle_center_y+swing_radius,
             width=100,
-            outline='green',
+            outline='#00FF00',
             style='arc',
-            start=150+i*(240/x),
-            extent=240/x+1)
+            start=130+i,
+            extent=2)
         arcs.append(arc)
 
+    global value_field
+    value_field = canvas.create_text(200, 50, justify='left', text='Maximum angle: \nMinimum angle: ', font=('Helvetica','24','bold'))
+
     global line
-    line = canvas.create_line(circle_center_x, circle_center_y, 0, 0, fill = 'black', width=10)
+    line = canvas.create_line(circle_center_x, circle_center_y, circle_center_x, circle_center_y+swing_radius, fill = 'black', width=10)
 
 def update(angle):
     swing_pos(angle)
+    show_values()
     for i in range(len(arcs)):
         arcs[i].tick()
 
@@ -117,6 +151,7 @@ async def main():
     screen_init()
     server.start()
     async for angle in server.receive():
+        print(angle) # läuft deutlich besser so, problem liegt in server.receive()
         update(angle)
 
 if __name__ == '__main__':

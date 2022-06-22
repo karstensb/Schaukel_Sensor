@@ -1,6 +1,7 @@
 #include <Arduino_LSM6DS3.h>
-#include <SPI.h>
 #include <WiFiNINA.h>
+
+#define LED (13)
 
 const char ssid[] = "vsis-raspberry-pi";
 const char pass[] = "raspberryvsis-pi3";
@@ -25,33 +26,40 @@ void getAccel(float& x, float& y, float& z){
 }
 
 void setup(){
-  //Serial.begin(9600);
+  pinMode(LED, OUTPUT);
 
   if(!IMU.begin()){
-     //Serial.println("Failed to initialize IMU!");
-    while(1);
+    while(1){
+      digitalWrite(LED, HIGH);
+      delay(1000);
+      digitalWrite(LED, LOW);
+      delay(100);
+    }
   }
 
-  //Serial.println("Connecting to WiFi network...");
   while(WiFi.begin(ssid, pass) != WL_CONNECTED){
-    //Serial.print("Attempting to connect to ");
-    //Serial.println(ssid);
-    delay(5000);
+    for(int i=0; i<25;++i){
+      digitalWrite(LED, HIGH);
+      delay(100);
+      digitalWrite(LED, LOW);
+      delay(100);
+    }
   }
-  //Serial.print("Established connection to ");
-  //Serial.println(ssid);
 
-  //Serial.println("Connecting to server...");
   if(!client.connect(host, port)){
-      //Serial.print("Unable to connect to server");
-      while(1);
+      while(1){
+      digitalWrite(LED, HIGH);
+      delay(100);
+      digitalWrite(LED, LOW);
+      delay(1000);
+    }
   }
-  //Serial.println("Connected to server");
+  digitalWrite(LED, HIGH);
   prev_time = millis();
 }
 
 void loop(){
-  float gyro_x, gyro_y, gyro_z, accel_x, accel_y, accel_z;
+  float gyro_x, gyro_y, gyro_z;
   getGyro(gyro_x, gyro_y, gyro_z);
 
   gyro_x -= 0.4;
@@ -60,19 +68,4 @@ void loop(){
   prev_gyro_x = gyro_x;
   client.print(angle);
   client.print(";");
-  //Serial.println(angle);
-
-  //getAccel(accel_x, accel_y, accel_z);
-  // client.print(gyro_x);
-  // client.print(";");
-  // client.print(gyro_y);
-  // client.print(";");
-  // client.print(gyro_z);
-  // client.print(";");
-  // client.print(accel_x);
-  // client.print(";");
-  // client.print(accel_y);
-  // client.print(";");
-  // client.print(accel_z);
-  // client.print("/");
 }
