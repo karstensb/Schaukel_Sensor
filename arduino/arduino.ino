@@ -5,9 +5,13 @@
 
 const char ssid[] = "vsis-raspberry-pi";
 const char pass[] = "raspberryvsis-pi3";
+const char host[] = "192.168.1.148";
+
+// const char ssid[] = "vsis-raspberry-pi2";
+// const char pass[] = "raspberryvsis-pi3";
+// const char host[] = "192.168.0.148";
 
 const uint16_t port = 8080;
-const char host[] = "192.168.1.148";
 
 unsigned long prev_time;
 double angle;
@@ -38,13 +42,14 @@ void setup(){
   }
 
   while(WiFi.begin(ssid, pass) != WL_CONNECTED){
-    for(int i=0; i<25;++i){
+    for(int i=0; i<10;++i){
       digitalWrite(LED, HIGH);
       delay(100);
       digitalWrite(LED, LOW);
       delay(100);
     }
   }
+  digitalWrite(LED, HIGH);
 
   if(!client.connect(host, port)){
       while(1){
@@ -54,7 +59,6 @@ void setup(){
       delay(1000);
     }
   }
-  digitalWrite(LED, HIGH);
   prev_time = millis();
 }
 

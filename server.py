@@ -1,12 +1,11 @@
 import socket
 import asyncio
-from webbrowser import get
 
 HOST = "0.0.0.0"
 PORT = 8080
 
-s : socket.socket = None
-conn : socket.socket = None
+s = None
+conn = None
 addr = None
 
 
@@ -16,12 +15,11 @@ def start():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind((HOST, PORT))
     s.listen()
+    s.settimeout(30)
     print("Waiting for connection...")
     conn, addr = s.accept()
     print(f"Connected by {addr}")
-
-def stop():
-    s.close()
+    conn.settimeout(5)
 
 async def get_data():
     bytes = conn.recv(1024)
@@ -34,19 +32,17 @@ async def receive():
     task = asyncio.create_task(get_data())
     while True:
         data = await task
-        temp = asyncio.create_task(get_data())
-        angle = float(data[0])
-        yield angle
+        task = asyncio.create_task(get_data())
         try:
-            angle = float(data[len(data)//3])
-            yield angle
-        except IndexError as e:
+            yield float(data[0])
+        except IndexError:
             pass
-        try:
-            angle = float(data[len(data)//3*2])
-            yield angle
-        except IndexError as e:
-            pass
-        angle = float(data[-1])
-        yield angle
-        task = temp
+        i = 0
+        x = 2
+        while not task.done() and i <= x:
+            try:
+                yield float(data[(len(data)-1)//x*i])
+            except IndexError:
+                pass
+            finally:
+                i += 1
