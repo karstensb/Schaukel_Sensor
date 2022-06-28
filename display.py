@@ -1,6 +1,5 @@
 import asyncio
 import math
-import time
 import tkinter as tk
 
 import server
@@ -13,10 +12,10 @@ circle = None
 value_field = None
 
 circle_center_x = None
-circle_center_y = 500
-circle_radius = 10
-swing_radius = 500
-swing_height = 3
+circle_center_y = None
+circle_radius = None
+swing_radius = None
+swing_height = None
 
 angle_max = 91
 angle_min = 91
@@ -37,11 +36,11 @@ class Arc:
         self.ticks = 0
 
     def highlight(self):
-        canvas.itemconfig(self.arc, outline="red", width=200)
+        canvas.itemconfig(self.arc, outline="red", width=600)
         self.ticks = 0
 
     def unhighlight(self):
-        canvas.itemconfig(self.arc, outline=self.color, width=100)
+        canvas.itemconfig(self.arc, outline=self.color, width=400)
 
     def set_max(self):
         canvas.itemconfig(self.arc, outline='#'+hex(colors[-61]).replace('0x','').rjust(6,'0'))
@@ -74,34 +73,34 @@ def swing_pos(angle):
     global prev_angle
     global angle_max
     global angle_min
-    if angle > 138:
-        angle = 138
-    elif angle < -139:
-        angle = -139
-    angle = int(angle)+91
+    if angle > 46:
+        angle = 46
+    elif angle < -49:
+        angle = -49
+    angle = int(angle+91)
     if angle > prev_angle:
-        while prev_angle < angle:
-            arcs[int(map(prev_angle, 230, -50, 0, 280))].set_max()
+        while prev_angle <= angle:
+            arcs[int(map(prev_angle, 139, 40, 0, 99))].set_max()
             prev_angle += 1
         if angle >= angle_max:
-            arcs[int(map(angle_max+1, 230, -50, 0, 280))].unhighlight()
+            arcs[int(map(angle_max+2, 139, 40, 0, 99))].unhighlight()
             angle_max = angle
-            arcs[int(map(angle+1, 230, -50, 0, 280))].highlight()
+            arcs[int(map(angle+2, 139, 40, 0, 99))].highlight()
     elif angle < prev_angle:
-        while prev_angle > angle:
-            arcs[int(map(prev_angle, 230, -50, 0, 280))].set_max()
+        while prev_angle >= angle:
+            arcs[int(map(prev_angle, 139, 40, 0, 99))].set_max()
             prev_angle -= 1
         if angle <= angle_min:
-            arcs[int(map(angle_min-1, 230, -50, 0, 280))].unhighlight()
+            arcs[int(map(angle_min-2, 139, 40, 0, 99))].unhighlight()
             angle_min = angle
-            arcs[int(map(angle-1, 230, -50, 0, 280))].highlight()
+            arcs[int(map(angle-2, 139, 40, 0, 99))].highlight()
 
-    angle = angle * math.pi/180
+    angle = ((angle-91)*2+92) * math.pi/180
     canvas.coords(line,
         circle_center_x,
         circle_center_y,
-        swing_radius*math.cos(angle) + circle_center_x,
-        swing_radius*math.sin(angle) + circle_center_y)
+        swing_radius * math.cos(angle) + circle_center_x,
+        swing_radius * math.sin(angle) + circle_center_y)
     window.update()
 
 def screen_init():
@@ -111,7 +110,15 @@ def screen_init():
     window.bind('<Escape>', quit)
 
     global circle_center_x
+    global circle_center_y
+    global circle_radius
+    global swing_radius
+    global swing_height
     circle_center_x = window.winfo_screenwidth() / 2
+    circle_center_y = window.winfo_screenheight() / 4
+    circle_radius = 10
+    swing_radius = window.winfo_screenheight() / 2
+    swing_height = 3
 
     global canvas
     canvas = tk.Canvas(window)
@@ -125,22 +132,21 @@ def screen_init():
         circle_center_y+circle_radius,
         fill='red')
 
-    x=280
-    for i in range(x):
+    for i in range(100):
         arc = Arc(
             circle_center_x-swing_radius,
             circle_center_y-swing_radius,
             circle_center_x+swing_radius,
             circle_center_y+swing_radius,
-            width=100,
+            width=400,
             outline='#00FF00',
             style='arc',
-            start=130+i,
-            extent=2)
+            start=170+i*2,
+            extent=3)
         arcs.append(arc)
 
     global value_field
-    value_field = canvas.create_text(220, 70, justify='left', text='Maximum angle: \nMinimum angle: \nCurrent angle: \nEstimated speed: ', font=('Helvetica','24','bold'))
+    value_field = canvas.create_text(220, 70, justify='left', text='Maximum angle: \nMinimum angle: \nCurrent angle: ', font=('Helvetica','24','bold'))
 
     global line
     line = canvas.create_line(circle_center_x, circle_center_y, circle_center_x, circle_center_y+swing_radius, fill = 'black', width=10)

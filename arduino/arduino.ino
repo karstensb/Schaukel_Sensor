@@ -15,6 +15,7 @@ const uint16_t port = 8080;
 
 unsigned long prev_time;
 double angle;
+double prev_angle = 0;
 double prev_gyro_x;
 
 WiFiClient client;
@@ -66,9 +67,13 @@ void loop(){
   float gyro_x, gyro_y, gyro_z;
   getGyro(gyro_x, gyro_y, gyro_z);
 
-  gyro_x -= 0.4;
+  gyro_x -= 0.34;
   angle = angle + (gyro_x+prev_gyro_x)/(double)2000 *(millis()-prev_time);
+  if(abs(prev_angle-angle) < 0.02){
+    angle = prev_angle;
+  }
   prev_time = millis();
+  prev_angle = angle;
   prev_gyro_x = gyro_x;
   client.print(angle);
   client.print(";");
