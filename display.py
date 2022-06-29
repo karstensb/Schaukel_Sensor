@@ -15,7 +15,6 @@ circle_center_x = None
 circle_center_y = None
 circle_radius = None
 swing_radius = None
-swing_height = None
 
 angle_max = 91
 angle_min = 91
@@ -53,6 +52,18 @@ class Arc:
             if self.ticks <= 0:
                 self.unhighlight()
 
+class Dummy:
+    def __init__(self, *args, **kwargs):
+        self.ticks = 0
+    def highlight(self):
+        pass
+    def unhighlight(self):
+        pass
+    def set_max(self):
+        pass
+    def tick(self):
+        pass
+
 def quit(e):
     window.destroy()
 
@@ -63,8 +74,6 @@ def show_values():
     global angle_max
     global angle_min
     global value_field
-    global swing_height_real
-    global swing_radius_real
     global canvas
 
     canvas.itemconfig(value_field, text=f'Maximum angle back:  {angle_max-91}°\nMaximum angle front: {-1*(angle_min-91)}°\nCurrent angle: {prev_angle-91}°')
@@ -113,12 +122,10 @@ def screen_init():
     global circle_center_y
     global circle_radius
     global swing_radius
-    global swing_height
     circle_center_x = window.winfo_screenwidth() / 2
     circle_center_y = window.winfo_screenheight() / 4
     circle_radius = 10
     swing_radius = window.winfo_screenheight() / 2
-    swing_height = 3
 
     global canvas
     canvas = tk.Canvas(window)
@@ -133,6 +140,9 @@ def screen_init():
         fill='red')
 
     for i in range(100):
+        if i == 94:
+            arcs.append(Dummy())
+            continue
         arc = Arc(
             circle_center_x-swing_radius,
             circle_center_y-swing_radius,
@@ -146,7 +156,7 @@ def screen_init():
         arcs.append(arc)
 
     global value_field
-    value_field = canvas.create_text(220, 70, justify='left', text='Maximum angle: \nMinimum angle: \nCurrent angle: ', font=('Helvetica','24','bold'))
+    value_field = canvas.create_text(220, 70, justify='left', font=('Helvetica','24','bold'))
 
     global line
     line = canvas.create_line(circle_center_x, circle_center_y, circle_center_x, circle_center_y+swing_radius, fill = 'black', width=10)
@@ -170,11 +180,14 @@ def reset():
         arc.unhighlight()
 
 async def main():
-    reset()
     server.start()
-    async for angle in server.receive():
-        update(angle)
-        print(angle) # läuft deutlich besser so, problem liegt in server.receive()
+    while True:
+        reset()
+        async for angle in server.receive():
+            if angle == 'RESET':
+                break
+            update(angle)
+            print(angle) # läuft deutlich besser so, problem liegt in server.receive()
 
 if __name__ == '__main__':
     screen_init()

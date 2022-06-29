@@ -17,6 +17,7 @@ unsigned long prev_time;
 double angle;
 double prev_angle = 0;
 double prev_gyro_x;
+double idle_time;
 
 WiFiClient client;
 
@@ -69,9 +70,20 @@ void loop(){
 
   gyro_x -= 0.34;
   angle = angle + (gyro_x+prev_gyro_x)/(double)2000 *(millis()-prev_time);
-  if(abs(prev_angle-angle) < 0.02){
+  if(abs(prev_angle-angle) < 0.05){
     angle = prev_angle;
+    idle_time += millis()-prev_time;
+    if(idle_time > 5000){
+      angle = 0;
+      gyro_x = 0;
+      idle_time = 0;
+      client.print("R");
+      delay(1000);
+    }
+  }else{
+    idle_time = 0;
   }
+  
   prev_time = millis();
   prev_angle = angle;
   prev_gyro_x = gyro_x;

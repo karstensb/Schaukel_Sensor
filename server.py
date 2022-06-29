@@ -8,7 +8,6 @@ s = None
 conn = None
 addr = None
 
-
 def start():
     global conn, addr, s 
     print("Starting server...")
@@ -24,7 +23,9 @@ def start():
 async def get_data():
     bytes = conn.recv(1024)
     while ';' not in str(bytes):
-        bytes += conn.recv(1024)
+        bytes += conn.recv(1024) 
+    if 'R' in str(bytes):
+        return 'RESET'
     data = str(bytes).replace('b', '').replace("'", "").split(';')[1:-2]
     return data
 
@@ -33,6 +34,8 @@ async def receive():
     while True:
         data = await task
         task = asyncio.create_task(get_data())
+        if data == 'RESET':
+            yield 'RESET'
         try:
             yield float(data[0])
         except IndexError:
