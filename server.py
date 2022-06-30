@@ -40,12 +40,12 @@ async def receive():
             yield float(data[0])
         except IndexError:
             pass
-        i = 0
-        x = 2
-        while not task.done() and i <= x:
-            try:
-                yield float(data[(len(data)-1)//x*i])
-            except IndexError:
-                pass
-            finally:
-                i += 1
+        # i = 0
+        # x = 2
+        # while not task.done() and i <= x:
+        #     try:
+        #         yield float(data[(len(data)-1)//x*i])
+        #     except IndexError:
+        #         pass
+        #     finally:
+        #         i += 1
